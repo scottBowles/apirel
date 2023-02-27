@@ -9,7 +9,7 @@ edition = "2021"
 actix-web = { version = "4.0.1", default-features = false, features = [
     "macros",
 ] }
-async-graphql = "4.0"
+async-graphql = { version = "4.0", features = ["chrono", "uuid"] }
 async-graphql-actix-web = "4.0"
 dotenvy = "0.15"
 # futures = "0.3.21"
@@ -22,6 +22,7 @@ sea-orm = { version = "0.10", features = [
     "with-chrono",
     "with-json",
     "postgres-array",
+    "with-uuid",
 ] }
 serde_json = "1.0"
 tokio = { version = "1.0.2", features = ["macros", "rt-multi-thread"] }

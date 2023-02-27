@@ -1,11 +1,19 @@
 use std::{env, time::Duration};
 
-use actix_web::{guard, web, web::Data, App, HttpServer};
-use async_graphql::{EmptySubscription, Schema};
+use actix_web::{guard, web, web::Data, App, HttpResponse, HttpServer};
+use async_graphql::{
+    http::{playground_source, GraphQLPlaygroundConfig},
+    EmptyMutation, EmptySubscription, Schema,
+};
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 
 use async_graphql::*;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+
+mod entities;
+mod schema;
+
+use schema::*;
 
 async fn db(db_url: String) -> Result<DatabaseConnection, sea_orm::DbErr> {
     let mut opt = ConnectOptions::new(db_url.to_owned());
@@ -15,9 +23,8 @@ async fn db(db_url: String) -> Result<DatabaseConnection, sea_orm::DbErr> {
         .acquire_timeout(Duration::from_secs(8))
         .idle_timeout(Duration::from_secs(8))
         .max_lifetime(Duration::from_secs(8))
-        .sqlx_logging(true)
-        // .sqlx_logging_level(log::LevelFilter::Info)
-        .set_schema_search_path("my_schema".into()); // Setting default PostgreSQL schema
+        .sqlx_logging(true);
+    // .sqlx_logging_level(log::LevelFilter::Info)
 
     Database::connect(opt).await
 }
@@ -83,10 +90,19 @@ impl Mutation {
     }
 }
 
-type RootSchema = Schema<Query, Mutation, EmptySubscription>;
+type RootSchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
+// type RootSchema = Schema<Query, Mutation, EmptySubscription>;
 
 async fn index(schema: web::Data<RootSchema>, req: GraphQLRequest) -> GraphQLResponse {
     schema.execute(req.into_inner()).await.into()
+}
+// fn graphql_playground() -> content::RawHtml<String> {
+//     content::RawHtml(playground_source(GraphQLPlaygroundConfig::new("/graphql")))
+// }
+async fn graphql_playground() -> HttpResponse {
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(playground_source(GraphQLPlaygroundConfig::new("/")))
 }
 
 #[actix_web::main]
@@ -98,22 +114,9 @@ async fn main() -> std::io::Result<()> {
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
     let db = db(db_url).await.unwrap();
 
-    let my_objects: Vec<MyObject> = vec![
-        MyObject { a: 1, b: 2 },
-        MyObject { a: 3, b: 4 },
-        MyObject { a: 5, b: 6 },
-    ];
-
-    let my_objs: Vec<MyObj> = vec![
-        MyObj { a: 12, b: 25 },
-        MyObj { a: 33, b: 46 },
-        MyObj { a: 54, b: 67 },
-    ];
-
-    // let schema = Schema::new(Query, EmptyMutation, EmptySubscription);
-    let schema = Schema::build(Query, Mutation, EmptySubscription)
-        .data(my_objects)
-        .data(my_objs)
+    // Build the Schema
+    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
+        .data(db) // Add the database connection to the GraphQL global context
         .finish();
 
     println!("GraphQL Endpoint: http://localhost:8000");
@@ -122,6 +125,11 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(Data::new(schema.clone()))
             .service(web::resource("/").guard(guard::Post()).to(index))
+            .service(
+                web::resource("/")
+                    .guard(guard::Get())
+                    .to(graphql_playground),
+            )
     })
     .bind("127.0.0.1:8000")?
     .run()
