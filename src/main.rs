@@ -29,66 +29,66 @@ async fn db(db_url: String) -> Result<DatabaseConnection, sea_orm::DbErr> {
     Database::connect(opt).await
 }
 
-#[derive(SimpleObject, InputObject, Clone, Copy)]
-#[graphql(input_name = "MyObjectInput")] // Note: You must use the input_name attribute to define a new name for the input type, otherwise a runtime error will occur.
-struct MyObject {
-    /// Value a
-    a: i32,
+// #[derive(SimpleObject, InputObject, Clone, Copy)]
+// #[graphql(input_name = "MyObjectInput")] // Note: You must use the input_name attribute to define a new name for the input type, otherwise a runtime error will occur.
+// struct MyObject {
+//     /// Value a
+//     a: i32,
 
-    /// Value b
-    b: i32,
-    // #[graphql(skip)]
-    // c: i32,
-}
+//     /// Value b
+//     b: i32,
+//     // #[graphql(skip)]
+//     // c: i32,
+// }
 
-#[derive(SimpleObject, Clone, Copy)]
-#[graphql(complex)] // NOTE: If you want the `ComplexObject` macro to take effect, this `complex` attribute is required.
-struct MyObj {
-    a: i32,
-    b: i32,
-}
+// #[derive(SimpleObject, Clone, Copy)]
+// #[graphql(complex)] // NOTE: If you want the `ComplexObject` macro to take effect, this `complex` attribute is required.
+// struct MyObj {
+//     a: i32,
+//     b: i32,
+// }
 
-#[ComplexObject]
-impl MyObj {
-    async fn c(&self) -> i32 {
-        self.a + self.b
-    }
-}
+// #[ComplexObject]
+// impl MyObj {
+//     async fn c(&self) -> i32 {
+//         self.a + self.b
+//     }
+// }
 
-struct Query;
+// struct Query;
 
-#[Object]
-impl Query {
-    /// Returns the sum of a and b
-    async fn add(&self, a: i32, b: i32) -> i32 {
-        a + b
-    }
-    async fn my_objects(&self, ctx: &Context<'_>) -> Vec<MyObject> {
-        ctx.data_unchecked::<Vec<MyObject>>().clone()
-    }
-    async fn my_objs(&self, ctx: &Context<'_>) -> Vec<MyObj> {
-        ctx.data_unchecked::<Vec<MyObj>>().clone()
-    }
-}
+// #[Object]
+// impl Query {
+//     /// Returns the sum of a and b
+//     async fn add(&self, a: i32, b: i32) -> i32 {
+//         a + b
+//     }
+//     async fn my_objects(&self, ctx: &Context<'_>) -> Vec<MyObject> {
+//         ctx.data_unchecked::<Vec<MyObject>>().clone()
+//     }
+//     async fn my_objs(&self, ctx: &Context<'_>) -> Vec<MyObj> {
+//         ctx.data_unchecked::<Vec<MyObj>>().clone()
+//     }
+// }
 
-struct Mutation;
+// struct Mutation;
 
-#[Object]
-impl Mutation {
-    // mutation to add an object to the my_objects array in the context
-    async fn add_my_object(&self, ctx: &Context<'_>, input: MyObject) -> MyObject {
-        let mut my_objects = ctx.data_unchecked::<Vec<MyObject>>().clone();
-        let new_object = MyObject {
-            a: input.a,
-            b: input.b,
-        };
-        my_objects.push(new_object);
-        // update the context
-        ctx.data_unchecked::<Vec<MyObject>>()
-            .clone_from(&&my_objects);
-        new_object
-    }
-}
+// #[Object]
+// impl Mutation {
+//     // mutation to add an object to the my_objects array in the context
+//     async fn add_my_object(&self, ctx: &Context<'_>, input: MyObject) -> MyObject {
+//         let mut my_objects = ctx.data_unchecked::<Vec<MyObject>>().clone();
+//         let new_object = MyObject {
+//             a: input.a,
+//             b: input.b,
+//         };
+//         my_objects.push(new_object);
+//         // update the context
+//         ctx.data_unchecked::<Vec<MyObject>>()
+//             .clone_from(&&my_objects);
+//         new_object
+//     }
+// }
 
 type RootSchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
 // type RootSchema = Schema<Query, Mutation, EmptySubscription>;

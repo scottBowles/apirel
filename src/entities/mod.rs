@@ -2,6 +2,7 @@
 
 pub mod prelude;
 
+pub mod association;
 pub mod spatial_ref_sys;
 pub mod us_gaz;
 pub mod us_lex;
