@@ -2,8 +2,10 @@
 
 use async_graphql::SimpleObject;
 use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, SimpleObject)]
+#[graphql(complex, name = "User")]
 #[sea_orm(table_name = "user")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
@@ -23,6 +25,15 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(has_many = "super::association::Entity")]
+    Association,
+}
+
+impl Related<super::association::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Association.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}
