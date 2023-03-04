@@ -287,7 +287,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "apirel"
+name = "apirel-api"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "apirel-domains",
+ "async-graphql",
+ "async-graphql-actix-web",
+ "dotenvy",
+ "http",
+ "sea-orm",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "apirel-domains"
 version = "0.1.0"
 dependencies = [
  "actix-web",
